@@ -2,6 +2,7 @@
 namespace WhatsON.Plugins.Travis
 {
   using Soloplan.WhatsON;
+  using Soloplan.WhatsON.Model;
   using System;
   using System.Collections.Generic;
   using System.Linq;
@@ -55,7 +56,7 @@ namespace WhatsON.Plugins.Travis
       var encodedSlug = HttpUtility.UrlEncode($"{owner}/{repository}");
 
       var url = $"{OpenSourceAPI_Url}repo/{encodedSlug}/branches?exists_on_github=true";
-      var jobs = await SerializationHelper.GetJsonModel<TravisJobs>(url, default, (request) => ApplyAuthorizationHeader(request));
+      var jobs = await SerializationHelper.GetJsonModel<TravisJobs>(url, default, ApplyAuthorizationHeader);
       if (jobs == null || jobs.Jobs == null)
       {
         return new List<TravisJob>();
@@ -67,7 +68,21 @@ namespace WhatsON.Plugins.Travis
     public static async Task<TravisBuild> GetBuild(int buildId)
     {
       var url = $"{OpenSourceAPI_Url}build/{buildId}";
-      return await SerializationHelper.GetJsonModel<TravisBuild>(url, default, (request) => ApplyAuthorizationHeader(request));
+      return await SerializationHelper.GetJsonModel<TravisBuild>(url, default, ApplyAuthorizationHeader);
+    }
+
+    public static async Task<IList<TravisBuild>> GetBuilds(string owner, string repository, string branch, int limit = Connector.MaxSnapshots)
+    {
+      var encodedSlug = HttpUtility.UrlEncode($"{owner}/{repository}");
+
+      var url = $"{OpenSourceAPI_Url}repo/{encodedSlug}/builds?branch.name={branch}&sort_by=number:desc&event_type=push&limit={limit}";
+      var builds = await SerializationHelper.GetJsonModel<TravisBuilds>(url, default, ApplyAuthorizationHeader);
+      if (builds == null || builds.Builds == null)
+      {
+        return new List<TravisBuild>();
+      }
+
+      return builds.Builds;
     }
 
     public static async Task<IList<TravisRepository>> GetRepositories(string address)
@@ -85,7 +100,7 @@ namespace WhatsON.Plugins.Travis
       }
 
       var url = $"{OpenSourceAPI_Url}owner/{organization}/repos?active=true";
-      var repositories = await SerializationHelper.GetJsonModel<TravisRepositories>(url, default, (request) => ApplyAuthorizationHeader(request));
+      var repositories = await SerializationHelper.GetJsonModel<TravisRepositories>(url, default, ApplyAuthorizationHeader);
       if (repositories == null || repositories.Repositories == null)
       {
         return new List<TravisRepository>();

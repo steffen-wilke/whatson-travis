@@ -25,6 +25,14 @@ namespace WhatsON.Plugins.Travis.Model
     [JsonProperty("finished_at")]
     public DateTime Finished { get; set; }
 
+    [JsonIgnore]
+    public bool Building
+    {
+      get
+      {
+        return this.Finished == default;
+      }
+    }
 
     [JsonProperty("@href")]
     public string Url { get; set; }

@@ -29,6 +29,14 @@
     }
 
     [Test]
+    public async Task TestFetchHistoryBuilds()
+    {
+      var builds = await TravisAPI.GetBuilds("gurkenlabs", "litiengine", "master");
+      Assert.IsNotNull(builds);
+      Assert.AreEqual(5, builds.Count);
+    } 
+
+    [Test]
     public void TestSlugEvaluation()
     {
       Assert.AreEqual("gurkenlabs", TravisAPI.GetOwnerName("gurkenlabs/litiengine"));

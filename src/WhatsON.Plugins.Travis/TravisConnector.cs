@@ -50,7 +50,16 @@ namespace WhatsON.Plugins.Travis
 
       var latestBuild = await TravisAPI.GetBuild(job.LastBuild.Id);
       this.CurrentStatus = CreateStatus(latestBuild);
-      // TODO: Add snapshots
+
+      this.CurrentStatus = CreateStatus(latestBuild);
+      if (this.Snapshots.Count == 0 && job.LastBuild.BuildNumber > 1)
+      {
+        foreach (var build in await TravisAPI.GetBuilds(this.Owner, this.Repository, this.Branch, MaxSnapshots))
+        {
+          var buildStatus = CreateStatus(build);
+          this.AddSnapshot(buildStatus);
+        }
+      }
     }
 
     private Status CreateStatus(TravisBuild build)
