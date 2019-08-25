@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Soloplan.WhatsON.Model;
 using System;
 
 namespace WhatsON.Plugins.Travis.Model
@@ -42,5 +43,20 @@ namespace WhatsON.Plugins.Travis.Model
     public User Culprit { get; set; }
 
     public TravisCommit Commit { get; set; }
+
+    public ObservationState GetState()
+    {
+      if (string.IsNullOrWhiteSpace(this.State))
+      {
+        return this.Finished != null ? ObservationState.Running : ObservationState.Unknown;
+      }
+
+      if (this.State.Equals("passed", StringComparison.InvariantCultureIgnoreCase))
+      {
+        return ObservationState.Success;
+      }
+
+      return ObservationState.Unknown;
+    }
   }
 }

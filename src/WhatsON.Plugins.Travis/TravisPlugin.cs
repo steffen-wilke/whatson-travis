@@ -7,7 +7,6 @@
   using Soloplan.WhatsON.Composition;
   using Soloplan.WhatsON.Configuration;
   using Soloplan.WhatsON.Model;
-  using WhatsON.Plugins.Travis.Model;
 
   public class TravisPlugin : ConnectorPlugin
   {
@@ -18,12 +17,15 @@
 
     public override void Configure(Project project, IConfigurationItemProvider configurationItemsSupport, string serverAddress)
     {
-      throw new System.NotImplementedException();
+      configurationItemsSupport.GetConfigurationByKey(Connector.ServerAddress).Value = TravisAPI.OpenSourceUrl;
+      configurationItemsSupport.GetConfigurationByKey(nameof(TravisConnector.Owner)).Value = TravisAPI.GetOwnerName(TravisAPI.GetSlug(serverAddress));
+      configurationItemsSupport.GetConfigurationByKey(nameof(TravisConnector.Repository)).Value = TravisAPI.GetRepositoryName(TravisAPI.GetSlug(serverAddress));
+      configurationItemsSupport.GetConfigurationByKey(nameof(TravisConnector.Branch)).Value = project.Name;
     }
 
     public override Connector CreateNew(ConnectorConfiguration configuration)
     {
-      throw new System.NotImplementedException();
+      return new TravisConnector(configuration);
     }
 
     public override async Task<IList<Project>> GetProjects(string address)

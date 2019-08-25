@@ -18,6 +18,13 @@ namespace WhatsON.Plugins.Travis
 
     public static string TRAVIS_AUTH_TOKEN_FROM_ARGS;
 
+    public static async Task<TravisJob> GetJob(string owner, string repository, string branch)
+    {
+      var encodedSlug = HttpUtility.UrlEncode($"{owner}/{repository}");
+
+      var url = $"{OpenSourceAPI_Url}repo/{encodedSlug}/branch/{branch}";
+      return await SerializationHelper.GetJsonModel<TravisJob>(url, default, (request) => ApplyAuthorizationHeader(request));
+    }
     /// <summary>
     /// This method filters out only jobs that still exist on GitHub.
     /// </summary>
@@ -55,6 +62,12 @@ namespace WhatsON.Plugins.Travis
       }
 
       return jobs.Jobs;
+    }
+
+    public static async Task<TravisBuild> GetBuild(int buildId)
+    {
+      var url = $"{OpenSourceAPI_Url}build/{buildId}";
+      return await SerializationHelper.GetJsonModel<TravisBuild>(url, default, (request) => ApplyAuthorizationHeader(request));
     }
 
     public static async Task<IList<TravisRepository>> GetRepositories(string address)
