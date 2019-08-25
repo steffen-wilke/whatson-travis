@@ -1,0 +1,7 @@
+/src/WhatsON.Plugins.Travis.Tests/Properties/PublishProfiles/FolderProfile.pubxml.user
+/src/WhatsON.Plugins.Travis.Tests/*.user
+/src/WhatsON.Plugins.Travis/bin
+/src/WhatsON.Plugins.Travis/obj
+/src/WhatsON.Plugins.Travis.Tests/bin
+/src/WhatsON.Plugins.Travis.Tests/obj
+/src/.vs
