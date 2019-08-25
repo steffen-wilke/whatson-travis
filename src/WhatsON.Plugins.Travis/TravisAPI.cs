@@ -6,7 +6,6 @@ namespace WhatsON.Plugins.Travis
   using System.Collections.Generic;
   using System.Linq;
   using System.Net;
-  using System.Threading;
   using System.Threading.Tasks;
   using System.Web;
   using WhatsON.Plugins.Travis.Model;
@@ -17,21 +16,7 @@ namespace WhatsON.Plugins.Travis
     public const string OpenSourceUrl = "https://travis-ci.com/";
     public const string ENV_TRAVIS_AUTH_TOKEN = "TRAVIS_AUTH_TOKEN";
 
-    /// <summary>
-    /// In order to perform the API calls against the real Travis CI server, you need to have the environment variable TRAVIS_AUTH_TOKEN set for your user to a valid authentication token.
-    /// For details on how the tokens work, please see https://developer.travis-ci.com/authentication.
-    /// </summary>
-    /// <returns></returns>
-    public static string FetchTravisToken()
-    {
-      var token = Environment.GetEnvironmentVariable(ENV_TRAVIS_AUTH_TOKEN, EnvironmentVariableTarget.User);
-      if (string.IsNullOrWhiteSpace(token))
-      {
-        throw new ArgumentException($"Could not fetch the Travis CI token from the environment variables of the user. Make sure that the environment variable {ENV_TRAVIS_AUTH_TOKEN} is set to a valid Travis CI API token (see https://developer.travis-ci.com/authentication).");
-      }
-
-      return token;
-    }
+    public static string TRAVIS_AUTH_TOKEN_FROM_ARGS;
 
     public static async Task<TravisJob> GetTravisJob(string slugOrId, string branch)
     {
@@ -66,7 +51,7 @@ namespace WhatsON.Plugins.Travis
       var encodedSlug = HttpUtility.UrlEncode($"{split[0]}/{split[1]}");
 
       var url = $"{OpenSourceAPI_Url}repo/{encodedSlug}/branches";
-      var jobs = await SerializationHelper.GetJsonModel<TravisJobs>(url, default, (request) => ApplyAuthorizationHeader(request, FetchTravisToken()));
+      var jobs = await SerializationHelper.GetJsonModel<TravisJobs>(url, default, (request) => ApplyAuthorizationHeader(request));
       if (jobs == null || jobs.Jobs == null)
       {
         return new List<TravisJob>();
@@ -75,9 +60,30 @@ namespace WhatsON.Plugins.Travis
       return jobs.Jobs.Where(x => x.Exists).ToList();
     }
 
-    private static void ApplyAuthorizationHeader(WebRequest request, string token)
+    private static void ApplyAuthorizationHeader(WebRequest request)
     {
-      request.Headers.Add(HttpRequestHeader.Authorization, $"token {token}");
+      request.Headers.Add(HttpRequestHeader.Authorization, $"token {FetchTravisToken()}");
+    }
+
+    /// <summary>
+    /// In order to perform the API calls against the real Travis CI server, you need to have the environment variable TRAVIS_AUTH_TOKEN set for your user to a valid authentication token.
+    /// For details on how the tokens work, please see https://developer.travis-ci.com/authentication.
+    /// </summary>
+    /// <returns></returns>
+    private static string FetchTravisToken()
+    {
+      if (TRAVIS_AUTH_TOKEN_FROM_ARGS != null)
+      {
+        return TRAVIS_AUTH_TOKEN_FROM_ARGS;
+      }
+
+      var token = Environment.GetEnvironmentVariable(ENV_TRAVIS_AUTH_TOKEN, EnvironmentVariableTarget.User);
+      if (string.IsNullOrWhiteSpace(token))
+      {
+        throw new ArgumentException($"Could not fetch the Travis CI token from the environment variables of the user. Make sure that the environment variable {ENV_TRAVIS_AUTH_TOKEN} is set to a valid Travis CI API token (see https://developer.travis-ci.com/authentication).");
+      }
+
+      return token;
     }
   }
 }
