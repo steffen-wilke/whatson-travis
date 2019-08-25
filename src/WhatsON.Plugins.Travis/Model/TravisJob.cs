@@ -16,6 +16,9 @@
     [JsonProperty("default_branch")]
     public bool IsDefault { get; set; }
 
+    [JsonProperty("exists_on_github")]
+    public bool Exists { get; set; }
+
     public TravisRepository Repository { get; set; }
 
     [JsonProperty("last_build")]

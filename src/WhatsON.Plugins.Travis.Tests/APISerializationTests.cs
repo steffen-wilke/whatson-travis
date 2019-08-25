@@ -180,8 +180,9 @@ namespace Tests
 
       Assert.IsNotNull(branch);
       Assert.AreEqual("master", branch.Name);
-      Assert.AreEqual(true, branch.IsDefault);
       Assert.AreEqual("/repo/5953577/branch/master", branch.Url);
+      Assert.IsTrue(branch.IsDefault);
+      Assert.IsTrue(branch.Exists);
 
       Assert.IsNotNull(branch.Repository);
       Assert.AreEqual("gurkenlabs/litiengine", branch.Repository.Slug);
