@@ -15,9 +15,32 @@
     [Test]
     public async Task TestFetchProjects()
     {
-      var jobContainer = await TravisAPI.GetTravisJobs("https://travis-ci.com/gurkenlabs/litiengine");
+      var jobContainer = await TravisAPI.GetJobs("https://travis-ci.com/gurkenlabs/litiengine");
       Assert.IsNotNull(jobContainer);
       Assert.IsTrue(jobContainer.Count > 0);
+    }
+
+    [Test]
+    public async Task TestFetchRepositories()
+    {
+      var repositoryContainer = await TravisAPI.GetRepositories("https://travis-ci.com/gurkenlabs");
+      Assert.IsNotNull(repositoryContainer);
+      Assert.IsTrue(repositoryContainer.Count > 0);
+    }
+
+    [Test]
+    public void TestSlugEvaluation()
+    {
+      Assert.AreEqual("gurkenlabs", TravisAPI.GetOwnerName("gurkenlabs/litiengine"));
+      Assert.AreEqual("gurkenlabs", TravisAPI.GetOwnerName("gurkenlabs/litiengine/"));
+
+      Assert.AreEqual("litiengine", TravisAPI.GetRepositoryName("gurkenlabs/litiengine"));
+      Assert.AreEqual("litiengine", TravisAPI.GetRepositoryName("gurkenlabs/litiengine/"));
+
+      Assert.AreEqual("gurkenlabs/litiengine", TravisAPI.GetSlug("https://travis-ci.com/gurkenlabs/litiengine"));
+      Assert.AreEqual("gurkenlabs/litiengine", TravisAPI.GetSlug("https://travis-ci.com/gurkenlabs/litiengine/"));
+
+      Assert.AreEqual("gurkenlabs/litiengine", TravisAPI.GetSlug("https://travis-ci.com/gurkenlabs/litiengine/asdsaldiahjsdnmasdöasdsadasödlasuidja"));
     }
   }
 }

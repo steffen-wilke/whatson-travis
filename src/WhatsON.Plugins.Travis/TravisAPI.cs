@@ -18,46 +18,98 @@ namespace WhatsON.Plugins.Travis
 
     public static string TRAVIS_AUTH_TOKEN_FROM_ARGS;
 
-    public static async Task<TravisJob> GetTravisJob(string slugOrId, string branch)
-    {
-      return null;
-    }
-
     /// <summary>
     /// This method filters out only jobs that still exist on GitHub.
     /// </summary>
     /// <param name="address"></param>
     /// <param name="token"></param>
     /// <returns></returns>
-    public static async Task<IList<TravisJob>> GetTravisJobs(string address)
+    public static async Task<IList<TravisJob>> GetJobs(string address)
     {
-      if (string.IsNullOrWhiteSpace(address))
+      var slug = GetSlug(address);
+      if (string.IsNullOrWhiteSpace(slug))
       {
-        return null;
+        return new List<TravisJob>();
       }
 
-      if (!address.StartsWith(OpenSourceUrl))
+      var organization = GetOwnerName(slug);
+      var repository = GetRepositoryName(slug);
+
+      if (string.IsNullOrEmpty(organization) || string.IsNullOrEmpty(repository))
       {
-        return null;
+        throw new ArgumentException($"Invalid Travis CI Url format. Make sure to include the owner and the project! Accepted format: {OpenSourceUrl}/OWNER/PROJECT");
       }
 
-      var slug = address.Substring(OpenSourceUrl.Length);
-      if (!slug.Contains("/"))
-      {
-        throw new ArgumentException($"Invalid Travis CI Url format. Make sure to include the organization and project! Accepted format: {OpenSourceUrl}/ORGANIZATION/PROJECT");
-      }
+      return await GetJobs(organization, repository);
+    }
 
-      var split = slug.Split('/');
-      var encodedSlug = HttpUtility.UrlEncode($"{split[0]}/{split[1]}");
+    public static async Task<IList<TravisJob>> GetJobs(string owner, string repository)
+    {
+      var encodedSlug = HttpUtility.UrlEncode($"{owner}/{repository}");
 
-      var url = $"{OpenSourceAPI_Url}repo/{encodedSlug}/branches";
+      var url = $"{OpenSourceAPI_Url}repo/{encodedSlug}/branches?exists_on_github=true";
       var jobs = await SerializationHelper.GetJsonModel<TravisJobs>(url, default, (request) => ApplyAuthorizationHeader(request));
       if (jobs == null || jobs.Jobs == null)
       {
         return new List<TravisJob>();
       }
 
-      return jobs.Jobs.Where(x => x.Exists).ToList();
+      return jobs.Jobs;
+    }
+
+    public static async Task<IList<TravisRepository>> GetRepositories(string address)
+    {
+      var slug = GetSlug(address);
+      if (string.IsNullOrWhiteSpace(slug))
+      {
+        return new List<TravisRepository>();
+      }
+
+      var organization = GetOwnerName(slug);
+      if (string.IsNullOrEmpty(organization))
+      {
+        throw new ArgumentException($"Invalid Travis CI Url format. Make sure to include the owner! Accepted format: {OpenSourceUrl}/OWNER");
+      }
+
+      var url = $"{OpenSourceAPI_Url}owner/{organization}/repos?active=true";
+      var repositories = await SerializationHelper.GetJsonModel<TravisRepositories>(url, default, (request) => ApplyAuthorizationHeader(request));
+      if (repositories == null || repositories.Repositories == null)
+      {
+        return new List<TravisRepository>();
+      }
+
+      return repositories.Repositories;
+    }
+
+    public static string GetSlug(string address)
+    {
+      if (string.IsNullOrWhiteSpace(address) || !address.StartsWith(OpenSourceUrl))
+      {
+        return null;
+      }
+
+      var rawSlug = address.Substring(OpenSourceUrl.Length);
+      return $"{GetOwnerName(rawSlug)}/{GetRepositoryName(rawSlug)}";
+    }
+
+    public static string GetOwnerName(string slug)
+    {
+      if (!slug.Contains("/"))
+      {
+        return slug;
+      }
+
+      return slug.Split('/')[0];
+    }
+
+    public static string GetRepositoryName(string slug)
+    {
+      if (!slug.Contains("/"))
+      {
+        return null;
+      }
+
+      return slug.Split('/')[1];
     }
 
     private static void ApplyAuthorizationHeader(WebRequest request)

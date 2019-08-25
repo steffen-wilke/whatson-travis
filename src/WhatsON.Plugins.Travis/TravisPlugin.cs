@@ -2,10 +2,12 @@
 {
   using System;
   using System.Collections.Generic;
+  using System.Linq;
   using System.Threading.Tasks;
   using Soloplan.WhatsON.Composition;
   using Soloplan.WhatsON.Configuration;
   using Soloplan.WhatsON.Model;
+  using WhatsON.Plugins.Travis.Model;
 
   public class TravisPlugin : ConnectorPlugin
   {
@@ -26,14 +28,52 @@
 
     public override async Task<IList<Project>> GetProjects(string address)
     {
-      var jobs = await TravisAPI.GetTravisJobs(address);
       var projects = new List<Project>();
-      foreach (var job in jobs)
+      var owner = TravisAPI.GetOwnerName(TravisAPI.GetSlug(address));
+      if (string.IsNullOrEmpty(owner))
       {
-        projects.Add(new Project() { Name = job.Name, Address = job.Url });
+        return projects;
+      }
+
+      var repositoryFromAddress = TravisAPI.GetRepositoryName(TravisAPI.GetSlug(address));
+      if (string.IsNullOrWhiteSpace(repositoryFromAddress))
+      {
+        // try to fetch all repositories for an organization
+        var repositories = await TravisAPI.GetRepositories(address);
+        foreach (var repository in repositories)
+        {
+          if (repository == null || string.IsNullOrWhiteSpace(repository.Name))
+          {
+            continue;
+          }
+
+          projects.Add(await AddProjects(owner, repository.Name));
+        }
+      }
+      else
+      {
+        projects.Add(await AddProjects(owner, repositoryFromAddress));
       }
 
       return projects;
+    }
+
+    private static async Task<Project> AddProjects(string owner, string repository)
+    {
+      var jobs = await TravisAPI.GetJobs(owner, repository);
+      if (!jobs.Any())
+      {
+        return null;
+      }
+
+      var parent = new Project() { Name = jobs.FirstOrDefault().Repository?.Name, Address = jobs.FirstOrDefault().Repository.Url };
+
+      foreach (var job in jobs)
+      {
+        parent.Children.Add(new Project() { Name = job.Name, Address = job.Url });
+      }
+
+      return parent;
     }
 
     public override void OnStartup(string[] args)

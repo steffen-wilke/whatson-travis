@@ -140,7 +140,7 @@ namespace Tests
     [Test]
     public void CulpritTest()
     {
-      var culprit = JsonConvert.DeserializeObject<Culprit>(USER_JSON);
+      var culprit = JsonConvert.DeserializeObject<User>(USER_JSON);
 
       Assert.IsNotNull(culprit);
       Assert.AreEqual(971191, culprit.Id);

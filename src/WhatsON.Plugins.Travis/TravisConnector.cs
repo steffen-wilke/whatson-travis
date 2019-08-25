@@ -8,7 +8,6 @@ namespace WhatsON.Plugins.Travis
   using Soloplan.WhatsON.Configuration;
   using Soloplan.WhatsON.Model;
 
-
   [ConnectorType("Travis", Description = "Retrieve the current status of a Travis project.")]
   public class TravisConnector : Connector
   {

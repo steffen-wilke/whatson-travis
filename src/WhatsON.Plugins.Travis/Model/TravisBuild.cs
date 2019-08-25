@@ -39,7 +39,7 @@ namespace WhatsON.Plugins.Travis.Model
     public TravisJob Job { get; set; }
 
     [JsonProperty("created_by")]
-    public Culprit Culprit { get; set; }
+    public User Culprit { get; set; }
 
     public TravisCommit Commit { get; set; }
   }

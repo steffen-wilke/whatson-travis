@@ -10,7 +10,11 @@
 
     public string Slug { get; set; }
 
+    public string Description { get; set; }
+
     [JsonProperty("@href")]
     public string Url { get; set; }
+
+    public User Owner { get; set; }
   }
 }
