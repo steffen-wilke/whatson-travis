@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Soloplan.WhatsON" Version="1.0.0-RC5" />
+    <PackageReference Include="Soloplan.WhatsON" Version="1.0.0-RC6" />
   </ItemGroup>
 
 </Project>
